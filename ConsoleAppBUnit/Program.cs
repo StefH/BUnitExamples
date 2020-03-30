@@ -47,6 +47,8 @@ namespace ConsoleAppBUnit
             {
                 c.Name = "x";
                 c.Age = 42;
+                c.NonGenericCallback = EventCallback.Empty;
+                c.GenericCallback = new EventCallback<EventArgs>();
             });
         }
 
@@ -91,10 +93,19 @@ namespace ConsoleAppBUnit
                 return base.RenderComponent<TComponent>(componentParameters.ToArray());
             }
 
-            public IRenderedComponent<TComponent> RenderComponent2<TComponent>(Action<ComponentBuilder<TComponent>> cb) where TComponent : class, IComponent
+            public IRenderedComponent<TComponent> RenderComponent2<TComponent>(Action<ComponentBuilder<TComponent>> a) where TComponent : class, IComponent, new()
             {
-                cb.Invoke(new ComponentBuilder<TComponent>());
-                return null; //base.RenderComponent<TComponent>(cb.);
+                var componentParameters = new List<ComponentParameter>();
+
+                var cb = new ComponentBuilder<TComponent>();
+                a.Invoke(cb);
+
+                foreach (var p in typeof(TComponent).GetProperties())
+                {
+                    componentParameters.Add(ComponentParameter.CreateParameter(p.Name, p.GetValue(cb.Component)));
+                }
+
+                return base.RenderComponent<TComponent>(componentParameters.ToArray());
             }
 
             public IRenderedComponent<TComponent> RenderComponent3<TComponent>(TComponent c) where TComponent : class, IComponent
