@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29920.165
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F9D5F631-8E4D-43DC-B647-6680D2549996}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppBUnit", "ConsoleAppBUnit\ConsoleAppBUnit.csproj", "{96B8C2B6-3272-4621-AAC0-34BAF3E05ED1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{96B8C2B6-3272-4621-AAC0-34BAF3E05ED1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96B8C2B6-3272-4621-AAC0-34BAF3E05ED1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96B8C2B6-3272-4621-AAC0-34BAF3E05ED1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96B8C2B6-3272-4621-AAC0-34BAF3E05ED1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{96B8C2B6-3272-4621-AAC0-34BAF3E05ED1} = {F9D5F631-8E4D-43DC-B647-6680D2549996}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A96F8EEC-9B59-464E-9229-F478D86B05F9}
+	EndGlobalSection
+EndGlobal
