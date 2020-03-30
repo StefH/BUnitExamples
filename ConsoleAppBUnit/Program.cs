@@ -24,6 +24,7 @@ namespace ConsoleAppBUnit
             //var di = new ServiceCollection();
             //di.AddLogging(lb => lb.AddFilter(f => f == LogLevel.Trace));
 
+            // With a sort of builder-pattern
             var r2 = x.RenderComponent2<Com>(cb =>
             {
                 var c = new Com
@@ -36,6 +37,7 @@ namespace ConsoleAppBUnit
                 cb.Set(c);
             });
 
+            // Just provide a new instance from the component and copy these values to parameters
             var r3 = x.RenderComponent3(new Com
             {
                 Age = 42,
@@ -43,6 +45,7 @@ namespace ConsoleAppBUnit
                 NonGenericCallback = EventCallback.Empty
             });
 
+            // Just provide an action to set some values to a new component and copy these values to parameters
             var r4 = x.RenderComponent4<Com>(c =>
             {
                 c.Name = "x";
