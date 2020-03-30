@@ -36,7 +36,7 @@ namespace ConsoleAppBUnit
                 cb.Set(c);
             });
 
-            var r3 = x.RenderComponent3<Com>(new Com
+            var r3 = x.RenderComponent3(new Com
             {
                 Age = 42,
                 Name = "n",
