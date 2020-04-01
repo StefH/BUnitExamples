@@ -59,7 +59,7 @@ namespace ConsoleAppBUnit
             builder.Set(c => c.Name, "name");
             builder.Set(c => c.Age, 42);
 
-            var r5 = x.RenderComponent5<Com>(builder);
+            var r5 = x.RenderComponent5(builder);
         }
 
         public static T Set<T, TProp>(T o,
@@ -191,7 +191,7 @@ namespace ConsoleAppBUnit
                 return base.RenderComponent<TComponent>(componentParameters.ToArray());
             }
 
-            public IRenderedComponent<TComponent> RenderComponent5<TComponent>(ComponentParameterTypedBuilder<Com> builder) where TComponent : class, IComponent
+            public IRenderedComponent<TComponent> RenderComponent5<TComponent>(ComponentParameterTypedBuilder<TComponent> builder) where TComponent : class, IComponent
             {
                 return base.RenderComponent<TComponent>(builder.Build());
             }
