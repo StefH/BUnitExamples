@@ -53,6 +53,60 @@ namespace ConsoleAppBUnit
                 c.NonGenericCallback = EventCallback.Empty;
                 c.GenericCallback = new EventCallback<EventArgs>();
             });
+
+
+            var builder = new ComponentParameterTypedBuilder<Com>();
+            builder.Set(c => c.Name, "name");
+            builder.Set(c => c.Age, 42);
+
+            var r5 = x.RenderComponent5<Com>(builder);
+        }
+
+        public static T Set<T, TProp>(T o,
+            Expression<Func<T, TProp>> field, TProp value)
+        {
+            var fn = ((MemberExpression)field.Body).Member.Name;
+            //o.GetType().GetProperty(fn).SetValue(o, value, null);
+            return o;
+        }
+
+        public class ComponentParameterTypedBuilder<TComponent> where TComponent : class, IComponent
+        {
+            private readonly List<ComponentParameter> _componentParameters = new List<ComponentParameter>();
+
+            public void Set<TValue>(Expression<Func<TComponent, TValue>> expression, TValue value)
+            {
+                if (expression.Body is MemberExpression memberExpression)
+                {
+                    string name = memberExpression.Member.Name;
+                    _componentParameters.Add(ComponentParameter.CreateParameter(name, value));
+                }
+            }
+
+            public ComponentParameter[] Build()
+            {
+                return _componentParameters.ToArray();
+            }
+        }
+
+        public static class ComponentParameterTyped<TComponent> where TComponent : class, IComponent
+        {
+            //public ComponentParameter Parameter { get; }
+
+            //public ComponentParameterTyped(Expression<Func<TComponent, TValue>> expression, TValue value)
+            //{
+            //    Parameter = ComponentParameter.CreateParameter("n", value);
+            //}
+
+            public static ComponentParameter Create(Expression<Func<TComponent, object>> expression, object value) //where TComponent : class, IComponent
+            {
+                return ComponentParameter.CreateParameter("n", value);
+            }
+
+            public static ComponentParameter Create2<TValue>(Expression<Func<TComponent, TValue>> expression, TValue value) //where TComponent : class, IComponent
+            {
+                return ComponentParameter.CreateParameter("n", value);
+            }
         }
 
         public class ComponentBuilder<TComponent> where TComponent : class, IComponent
@@ -135,6 +189,11 @@ namespace ConsoleAppBUnit
                 }
 
                 return base.RenderComponent<TComponent>(componentParameters.ToArray());
+            }
+
+            public IRenderedComponent<TComponent> RenderComponent5<TComponent>(ComponentParameterTypedBuilder<Com> builder) where TComponent : class, IComponent
+            {
+                return base.RenderComponent<TComponent>(builder.Build());
             }
         }
 
