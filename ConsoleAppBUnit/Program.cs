@@ -1,13 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Bunit;
+using FizzWare.NBuilder;
 using Microsoft.AspNetCore.Components;
+using Moq;
+using NSubstitute;
+using NSubstitute.ReceivedExtensions;
+
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace ConsoleAppBUnit
 {
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -18,7 +27,7 @@ namespace ConsoleAppBUnit
             var r1 = x.RenderComponent<Com>(
                  c => c.Name == "x",
                  c => c.Age == 42
-             //c => c.NonGenericCallback == EventCallback.Empty   <<< does not work ; so this interface cannot be used...
+                 //c => c.NonGenericCallback == EventCallback.Empty   <<< does not work ; so this interface cannot be used...
              );
 
             //var di = new ServiceCollection();
@@ -60,6 +69,22 @@ namespace ConsoleAppBUnit
             builder.Set(c => c.Age, 42);
 
             var r5 = x.RenderComponent5(builder);
+
+            var products = new Builder()
+                .CreateListOfSize<Com>(10)
+                .IndexOf(0)
+                .With(xxx => xxx.Name = "A special title")
+                .Build();
+
+            var r6 = x.RenderComponent6<Com>(
+                c => c.Name = "stef",
+                c => c.Age = 42
+            );
+
+            var r7 = x.RenderComponent<Com>(
+                ComponentParameterTyped<Com>.Create(c => c.Name, "n"),
+                ComponentParameterTyped<Com>.Create(c => c.Age, 3)
+            );
         }
 
         public static T Set<T, TProp>(T o,
@@ -89,24 +114,32 @@ namespace ConsoleAppBUnit
             }
         }
 
-        public static class ComponentParameterTyped<TComponent> where TComponent : class, IComponent
+        public class ComponentParameterTyped<TComponent> where TComponent : class, IComponent
         {
-            //public ComponentParameter Parameter { get; }
+            public static ComponentParameterTyped<TComponent> Createx(Expression<Func<TComponent, object>> expression, object value) //where TComponent : class, IComponent
+            {
+                return null;
+            }
 
-            //public ComponentParameterTyped(Expression<Func<TComponent, TValue>> expression, TValue value)
+            public static ComponentParameter Create<TValue>(Expression<Func<TComponent, TValue>> expression, TValue value) //where TComponent : class, IComponent
+            {
+                if (expression.Body is MemberExpression memberExpression)
+                {
+                    string name = memberExpression.Member.Name;
+                    return ComponentParameter.CreateParameter(name, value);
+                }
+                throw new Exception();
+            }
+
+            //public static ComponentParameterTyped<TComponent> Create<TValue>(Expression<Func<TComponent, TValue>> expression, TValue value) //where TComponent : class, IComponent
             //{
-            //    Parameter = ComponentParameter.CreateParameter("n", value);
+            //    if (expression.Body is MemberExpression memberExpression)
+            //    {
+            //        string name = memberExpression.Member.Name;
+            //        return ComponentParameter.CreateParameter(name, value);
+            //    }
+            //    throw new Exception();
             //}
-
-            public static ComponentParameter Create(Expression<Func<TComponent, object>> expression, object value) //where TComponent : class, IComponent
-            {
-                return ComponentParameter.CreateParameter("n", value);
-            }
-
-            public static ComponentParameter Create2<TValue>(Expression<Func<TComponent, TValue>> expression, TValue value) //where TComponent : class, IComponent
-            {
-                return ComponentParameter.CreateParameter("n", value);
-            }
         }
 
         public class ComponentBuilder<TComponent> where TComponent : class, IComponent
@@ -195,9 +228,93 @@ namespace ConsoleAppBUnit
             {
                 return base.RenderComponent<TComponent>(builder.Build());
             }
+
+            public class Variance
+            {
+                public string Prop { get; set; }
+                public object Left { get; set; }
+                public object Right { get; set; }
+            }
+
+            public static List<Variance> DetailedCompare<T>(T left, T right)
+            {
+                List<Variance> variances = new List<Variance>();
+                var fi = left.GetType().GetProperties();
+                foreach (var f in fi)
+                {
+                    var v = new Variance
+                    {
+                        Prop = f.Name,
+                        Left = f.GetValue(left),
+                        Right = f.GetValue(right)
+                    };
+
+                    if (!Equals(v.Left, v.Right))
+                    {
+                        variances.Add(v);
+                    }
+
+                }
+                return variances;
+            }
+
+            public IRenderedComponent<TComponent> RenderComponent6<TComponent>(params Action<TComponent>[] actions) where TComponent : class, IComponent, new()
+            {
+                var componentParameters = new List<ComponentParameter>();
+
+                foreach (var action in actions)
+                {
+                    var orig = new TComponent();
+                    var n = new TComponent();
+
+                    action.Invoke(n);
+
+                    var name = action.Method.Name;
+                    var com = DetailedCompare(orig, n);
+
+                    var variance = com.FirstOrDefault();
+                    if (variance != null)
+                    {
+                        componentParameters.Add(ComponentParameter.CreateParameter(variance.Prop, variance.Left ?? variance.Right));
+                    }
+                }
+
+                return base.RenderComponent<TComponent>(componentParameters.ToArray());
+
+
+
+
+                ////var m = new Mock<TComponent>();
+                //var m = NSubstitute.Substitute.For<TComponent>();
+
+                ////var t = new TComponent();
+                //actions[0].Invoke(n);
+
+
+
+                ////m.VerifySet(actions[0], Times.Once);
+
+                //var aaa = m.ReceivedWithAnyArgs(Quantity.AtLeastOne());
+
+
+                //var xxxx = m.Received();
+                //var f = typeof(TComponent).GetProperties().Where(p => p.Name == "Name").First();
+
+
+                //var calls = m.ReceivedCalls();
+
+                ////m.
+
+                //return null; //base.RenderComponent<TComponent>(builder.Build());
+            }
+
+            public IRenderedComponent<TComponent> RenderComponent7<TComponent>(params ComponentParameterTyped<TComponent>[] parameters) where TComponent : class, IComponent
+            {
+                return null;// base.RenderComponent<TComponent>(builder.Build());
+            }
         }
 
-        class Com : IComponent
+        public class Com : IComponent
         {
             [Parameter]
             public string Name { get; set; }
