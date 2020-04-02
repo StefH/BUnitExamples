@@ -7,6 +7,9 @@
 
   <ItemGroup>
     <PackageReference Include="bunit" Version="1.0.0-beta-6" />
+    <PackageReference Include="ChangeTracking" Version="2.2.17" />
+    <PackageReference Include="FakeItEasy" Version="6.0.0" />
+    <PackageReference Include="JustMock" Version="2020.1.113.1" />
     <PackageReference Include="Moq" Version="4.13.1" />
     <PackageReference Include="NBuilder" Version="6.1.0" />
     <PackageReference Include="NSubstitute" Version="4.2.1" />
