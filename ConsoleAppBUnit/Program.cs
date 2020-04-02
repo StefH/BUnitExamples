@@ -12,6 +12,7 @@ using ChangeTracking;
 using FakeItEasy;
 using FizzWare.NBuilder;
 using Microsoft.AspNetCore.Components;
+using Mono.Reflection;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
 using IInvocation = Moq.IInvocation;
@@ -81,8 +82,11 @@ namespace ConsoleAppBUnit
                 .Build();
 
             var r6 = x.RenderComponent6<Com>(
-                c => c.Name = "stef",
-                c => c.Age = 42
+                //c => c.Name = "stef",
+                //c => c.NameNull = null,
+                //c => c.Age = 42,
+                //c => c.NonGenericCallback = EventCallback.Empty,
+                c => c.GenericCallback = new EventCallback<EventArgs>()
             );
 
             var r7 = x.RenderComponent<Com>(
@@ -217,13 +221,29 @@ namespace ConsoleAppBUnit
             {
                 var componentParameters = new List<ComponentParameter>();
 
-                var component = new TComponent();
-                a.Invoke(component);
+                var instructions = a.Method.GetInstructions();
 
-                foreach (var p in typeof(TComponent).GetProperties())
+                foreach (var callVirt1 in instructions.Where(i => i.OpCode == OpCodes.Callvirt))
                 {
-                    componentParameters.Add(ComponentParameter.CreateParameter(p.Name, p.GetValue(component)));
+                    if (callVirt1.Operand is MethodInfo methodInfo1 && callVirt1.Previous?.Operand != null)
+                    {
+                        string name = methodInfo1.Name.Replace("set_", "");
+                        //Console.WriteLine($"PropertyName  = {name}");
+
+                        object value = callVirt1.Previous.Operand;
+                        //Console.WriteLine($"PropertyValue = '{value}'");
+
+                        componentParameters.Add(ComponentParameter.CreateParameter(name, value));
+                    }
                 }
+
+                //var component = new TComponent();
+                //a(component);
+
+                //foreach (var p in typeof(TComponent).GetProperties())
+                //{
+                //    componentParameters.Add(ComponentParameter.CreateParameter(p.Name, p.GetValue(component)));
+                //}
 
                 return base.RenderComponent<TComponent>(componentParameters.ToArray());
             }
@@ -288,67 +308,7 @@ namespace ConsoleAppBUnit
                 return (Expression<Func<T>>)lambda;
             }
 
-            //private static TypeBuilder CreateImplementationType(string name, PropertyInfo[] properties)
-            //{
-            //    TypeBuilder typeBuilder = moduleBuilder.DefineType(name,
-            //        TypeAttributes.Public |
-            //        TypeAttributes.Class |
-            //        TypeAttributes.AutoClass |
-            //        TypeAttributes.AnsiClass |
-            //        TypeAttributes.AutoLayout,
-            //        typeof(object));
-
-            //    foreach (PropertyInfo pi in properties)
-            //    {
-            //        string piName = pi.Name;
-            //        Type propertyType = pi.PropertyType;
-
-            //        FieldBuilder field = typeBuilder.DefineField("_" + piName, propertyType, FieldAttributes.Private);
-
-            //        MethodInfo getMethod = pi.GetGetMethod();
-            //        if (getMethod != null)
-            //        {
-            //            MethodBuilder methodBuilder = typeBuilder.DefineMethod(
-            //                getMethod.Name,
-            //                MethodAttributes.Public |
-            //                MethodAttributes.SpecialName |
-            //                MethodAttributes.Virtual,
-            //                propertyType,
-            //                Type.EmptyTypes);
-
-            //            var ilGenerator = methodBuilder.GetILGenerator();
-            //            ilGenerator.Emit(OpCodes.Ldarg_0); // Load "this"
-            //            ilGenerator.Emit(OpCodes.Ldfld, field); // Load the backing field
-            //            ilGenerator.Emit(OpCodes.Ret); // Return the value on the stack (field)
-
-            //            // Override the get method from the original type to this IL-generated version
-            //            typeBuilder.DefineMethodOverride(methodBuilder, getMethod);
-            //        }
-
-            //        var setMethod = pi.GetSetMethod();
-            //        if (setMethod != null)
-            //        {
-            //            var methodBuilder = typeBuilder.DefineMethod(
-            //                setMethod.Name,
-            //                MethodAttributes.Public |
-            //                MethodAttributes.SpecialName |
-            //                MethodAttributes.Virtual,
-            //                typeof(void),
-            //                new Type[] { pi.PropertyType });
-
-            //            var ilGenerator = methodBuilder.GetILGenerator();
-            //            ilGenerator.Emit(OpCodes.Ldarg_0); // Load "this"
-            //            ilGenerator.Emit(OpCodes.Ldarg_1); // Load the set value
-            //            ilGenerator.Emit(OpCodes.Stfld, field); // Set the field to the set value
-            //            ilGenerator.Emit(OpCodes.Ret);
-
-            //            // Override the set method from the original type to this IL-generated version
-            //            typeBuilder.DefineMethodOverride(methodBuilder, setMethod);
-            //        }
-            //    }
-
-            //    return typeBuilder;
-            //}
+        
 
             public class Interceptor : IInterceptor
             {
@@ -453,7 +413,6 @@ namespace ConsoleAppBUnit
                 }
             }
 
-
             public Action<object> Convert<T>(Action<T> myActionT)
             {
                 if (myActionT == null)
@@ -470,69 +429,99 @@ namespace ConsoleAppBUnit
                 //var ccc = new Com();
                 foreach (var action in actions)
                 {
-                    var props = typeof(TComponent).GetProperties();
-                    foreach (var p in props)
+                    var xx1 = action.Method.GetInstructions();
+                    var callVirt1 = xx1.FirstOrDefault(x => x.OpCode == OpCodes.Callvirt);
+                    if (callVirt1 != null && callVirt1.Operand is MethodInfo methodInfo1)
                     {
-                        //var ex = CreatePropertyGetterExpression(typeof(TComponent), p);
-                        var ex2 = CreatePropertyGetterExpression<TComponent>(p);
-                        // A.CallToSet(() => fc2.Name)).i
-                    }
-                    var mc = (object)new MyClassBuilder(typeof(TComponent).Name + "Dynamic").CreateObject(props.Select(p => p.Name).ToArray(), props.Select(p => p.PropertyType).ToArray());
+                        string name = methodInfo1.Name.Replace("set_", "");
+                        Console.WriteLine($"PropertyName  = {name}");
 
-                    var ast = new TComponent();
-                    //var ast2 = ast.AsTrackable();
-
-                    //var trackable = ast2.CastToIChangeTrackable();
-
-                    var cp = (TComponent)new ProxyGenerator().CreateClassProxy(typeof(TComponent), new Type[0],
-                        new ProxyGenerationOptions
+                        bool valueFound = false;
+                        object value = null;
+                        if (callVirt1.Previous?.Operand != null)
                         {
+                            value = callVirt1.Previous.Operand;
+                            valueFound = true;
+                        }
+                        else if (callVirt1.Previous?.OpCode == OpCodes.Ldnull)
+                        {
+                            value = null;
+                            valueFound = true;
+                        }
 
-                        });
-                    //var ct = new ProxyGenerator().CreateInterfaceProxyWithTarget()
+                        if (valueFound)
+                        {
+                            Console.WriteLine($"PropertyValue = '{value}'");
 
-                    //var cp  = order.AsTrackable();
-
-
-                    //var fc2 = A.Fake<Com>();
-                    var fc = A.Fake<TComponent>();
-
-                    // Use the conventional .NET prefix "set_" to refer to a property's setter:
-                    A.CallTo(fc).Where(call => call.Method.Name != "set_Address")
-                        .Throws(new Exception("we can't move"));
-
-                    A.CallTo(fc).Where(call => call != null).Invokes(x =>
-                    {
-                        int xxxx = 9;
-                    });
-                    // .Throws(new Exception("we can't move"));
+                            componentParameters.Add(ComponentParameter.CreateParameter(name, value));
+                        }
+                    }
 
 
 
+                    //var props = typeof(TComponent).GetProperties();
+                    //foreach (var p in props)
+                    //{
+                    //    //var ex = CreatePropertyGetterExpression(typeof(TComponent), p);
+                    //    var ex2 = CreatePropertyGetterExpression<TComponent>(p);
+                    //    // A.CallToSet(() => fc2.Name)).i
+                    //}
+                    //var mc = (object)new MyClassBuilder(typeof(TComponent).Name + "Dynamic").CreateObject(props.Select(p => p.Name).ToArray(), props.Select(p => p.PropertyType).ToArray());
+
+                    //var ast = new TComponent();
+                    ////var ast2 = ast.AsTrackable();
+
+                    ////var trackable = ast2.CastToIChangeTrackable();
+
+                    //var cp = (TComponent)new ProxyGenerator().CreateClassProxy(typeof(TComponent), new Type[0],
+                    //    new ProxyGenerationOptions
+                    //    {
+
+                    //    });
+                    ////var ct = new ProxyGenerator().CreateInterfaceProxyWithTarget()
+
+                    ////var cp  = order.AsTrackable();
 
 
-                    var orig = new TComponent();
-                    var n = new TComponent();
+                    ////var fc2 = A.Fake<Com>();
+                    //var fc = A.Fake<TComponent>();
+
+                    //// Use the conventional .NET prefix "set_" to refer to a property's setter:
+                    //A.CallTo(fc).Where(call => call.Method.Name != "set_Address")
+                    //    .Throws(new Exception("we can't move"));
+
+                    //A.CallTo(fc).Where(call => call != null).Invokes(x =>
+                    //{
+                    //    int xxxx = 9;
+                    //});
+                    //// .Throws(new Exception("we can't move"));
+
+
+
+
+
+                    //var orig = new TComponent();
+                    //var n = new TComponent();
 
                     //var action2 = Convert(action);
 
                     //action2.Invoke(mc);
-                    action.Invoke(n);
+                    //action.Invoke(n);
 
                     //cp.Execute();
 
-                    var calls = Fake.GetCalls(fc).ToList();
-                    var man = Fake.GetFakeManager(fc);
+                    //var calls = Fake.GetCalls(fc).ToList();
+                    //var man = Fake.GetFakeManager(fc);
 
 
-                    //var name = action.Method.Name;
-                    var com = DetailedCompare(orig, n);
+                    ////var name = action.Method.Name;
+                    //var com = DetailedCompare(orig, n);
 
-                    var variance = com.FirstOrDefault();
-                    if (variance != null)
-                    {
-                        componentParameters.Add(ComponentParameter.CreateParameter(variance.Prop, variance.Left ?? variance.Right));
-                    }
+                    //var variance = com.FirstOrDefault();
+                    //if (variance != null)
+                    //{
+                    //    componentParameters.Add(ComponentParameter.CreateParameter(variance.Prop, variance.Left ?? variance.Right));
+                    //}
                 }
 
                 return base.RenderComponent<TComponent>(componentParameters.ToArray());
@@ -574,6 +563,9 @@ namespace ConsoleAppBUnit
         {
             [Parameter]
             public string Name { get; set; }
+
+            [Parameter]
+            public string NameNull { get; set; }
 
             [Parameter]
             public int Age { get; set; }
