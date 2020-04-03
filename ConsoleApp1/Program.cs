@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using ClrTest.Reflection;
+//using ILDisassembler;
 using Mono.Reflection;
 
 namespace ConsoleApp1
@@ -222,8 +223,33 @@ namespace ConsoleApp1
         
         static void Main()
         {
-            Action<Foo> f1 = foo => foo.Str = "d";
+            //Func<string, int> del =
+            //    str =>
+            //    {
+            //        var i = int.Parse(str);
+            //        return (int)Math.Pow(2, i);
+            //    };
+
+            
+
+
+            string s1 = "stef1";
+            string s2 = "stef2";
+            Action<Foo> f1 = foo => foo.Str = s1 + s2;
             //Console.WriteLine(DumpMethod(f1));
+
+
+            var ops = Sigil.Disassembler<Action<Foo>>.Disassemble(f1);
+            //var ops = Sigil.Disassembler<Func<string, int>>.Disassemble(del);
+
+            var calls = ops.Where(o => o.IsOpCode && new[] { OpCodes.Call, OpCodes.Callvirt }.Contains(o.OpCode)).ToList();
+            var methods = calls.Select(c => c.Parameters.ElementAt(0)).Cast<MethodInfo>().ToList();
+
+
+            var disassembler = new ILDisassembler.Disassembler();
+            var ft = typeof(Foo);
+            var strings = disassembler.DisassembleMethod(f1.Method);
+
 
             var xx1 = f1.Method.GetInstructions();
             foreach (var x in xx1)
@@ -237,7 +263,17 @@ namespace ConsoleApp1
                 Console.WriteLine($"PropertyName  = {methodInfo1.Name.Replace("set_","")}");
 
                 var value = callVirt1.Previous.Operand;
-                Console.WriteLine($"PropertyValue = '{value}'");
+                if (value is MethodInfo mi)
+                {
+                    var i = mi.GetInstructions();
+
+                    int xxxxx7 = 9;
+                }
+                else
+                {
+                    Console.WriteLine($"NORMAL PropertyValue = '{value}'");
+                }
+                
             }
 
 
