@@ -13,8 +13,10 @@ using FakeItEasy;
 using FizzWare.NBuilder;
 using Microsoft.AspNetCore.Components;
 using Mono.Reflection;
+using Moq;
 using NSubstitute;
 using NSubstitute.ReceivedExtensions;
+using Telerik.JustMock;
 using IInvocation = Moq.IInvocation;
 
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
@@ -82,25 +84,25 @@ namespace ConsoleAppBUnit
                 .Build();
 
             var r6 = x.RenderComponent6<Com>(
-                //c => c.Name = "stef",
-                //c => c.NameNull = null,
-                //c => c.Age = 42,
-                //c => c.NonGenericCallback = EventCallback.Empty,
+                c => c.Name = "stef",
+                c => c.NameNull = null,
+                c => c.Age = 42 + 1,
+                c => c.NonGenericCallback = EventCallback.Empty,
                 c => c.GenericCallback = new EventCallback<EventArgs>()
             );
 
             var r7 = x.RenderComponent<Com>(
                 ComponentParameterTyped<Com>.Create(c => c.Name, "n"),
-                ComponentParameterTyped<Com>.Create(c => c.Age, 3)
+                ComponentParameterTyped<Com>.Create(c => c.Age, 3),
+                ComponentParameterTyped<Com>.Create(c => c.NameNull, null),
+                ComponentParameterTyped<Com>.Create(c => c.NonGenericCallback, EventCallback.Empty),
+                ComponentParameterTyped<Com>.Create(c => c.GenericCallback, new EventCallback<EventArgs>())
             );
-        }
 
-        public static T Set<T, TProp>(T o,
-            Expression<Func<T, TProp>> field, TProp value)
-        {
-            var fn = ((MemberExpression)field.Body).Member.Name;
-            //o.GetType().GetProperty(fn).SetValue(o, value, null);
-            return o;
+            //var r8 = x.RenderComponent<Com>(
+            //    ComponentParameterTyped<Com>.Create(c => c.Name = "n"),
+            //    ComponentParameterTyped<Com>.Create(c => c.Age = 3)
+            //);
         }
 
         public class ComponentParameterTypedBuilder<TComponent> where TComponent : class, IComponent
@@ -136,6 +138,18 @@ namespace ConsoleAppBUnit
                     string name = memberExpression.Member.Name;
                     return ComponentParameter.CreateParameter(name, value);
                 }
+                throw new Exception();
+            }
+
+            public static ComponentParameter Create<TValue>(Func<TComponent, TValue> func) //where TComponent : class, IComponent
+            {
+                
+
+                //if (expression.Body is MemberExpression memberExpression)
+                //{
+                //    string name = memberExpression.Member.Name;
+                //    return ComponentParameter.CreateParameter(name, value);
+                //}
                 throw new Exception();
             }
 
@@ -308,7 +322,7 @@ namespace ConsoleAppBUnit
                 return (Expression<Func<T>>)lambda;
             }
 
-        
+
 
             public class Interceptor : IInterceptor
             {
@@ -429,35 +443,70 @@ namespace ConsoleAppBUnit
                 //var ccc = new Com();
                 foreach (var action in actions)
                 {
-                    var xx1 = action.Method.GetInstructions();
-                    var callVirt1 = xx1.FirstOrDefault(x => x.OpCode == OpCodes.Callvirt);
-                    if (callVirt1 != null && callVirt1.Operand is MethodInfo methodInfo1)
+                    //var cpOriginal = new ProxyGenerator().CreateClassProxy<TComponent>();
+                    //var cpNew = new ProxyGenerator().CreateClassProxy<TComponent>();
+
+                    var cpOriginal = A.Fake<TComponent>();
+                    var cpNew = A.Fake<TComponent>();
+
+                    //var cpOriginal = Substitute.For<TComponent>();
+                    //var cpNew = Substitute.For<TComponent>();
+
+                    //var cpOriginal = Mock.Create<TComponent>();
+                    //var cpNew = Mock.Create<TComponent>(Constructor.Mocked);
+
+                    //action(cpNew);
+
+                    var com = DetailedCompare(cpOriginal, cpNew);
+
+                    var variance = com.FirstOrDefault();
+                    if (variance != null)
                     {
-                        string name = methodInfo1.Name.Replace("set_", "");
-                        Console.WriteLine($"PropertyName  = {name}");
+                        // componentParameters.Add(ComponentParameter.CreateParameter(variance.Prop, variance.Left ?? variance.Right));
+                    }
 
-                        bool valueFound = false;
-                        object value = null;
-                        if (callVirt1.Previous?.Operand != null)
+                    var instructions = action.Method.GetInstructions();
+                    var virtualCall = instructions.FirstOrDefault(x => x.OpCode == OpCodes.Callvirt);
+                    if (virtualCall != null && virtualCall.Operand is MethodInfo methodInfo1)
+                    {
+                      //  bool valueFound = false;
+                        object value;
+                        if (virtualCall.Previous?.Operand != null)
                         {
-                            value = callVirt1.Previous.Operand;
-                            valueFound = true;
+                            if (virtualCall.Previous.Operand is MethodInfo)
+                            {
+                                throw new NotSupportedException();
+                            }
+
+                            // Normal value
+                            value = virtualCall.Previous.Operand;
+                            // valueFound = true;
                         }
-                        else if (callVirt1.Previous?.OpCode == OpCodes.Ldnull)
+                        else if (virtualCall.Previous?.OpCode == OpCodes.Ldnull)
                         {
+                            // Null value
                             value = null;
-                            valueFound = true;
+                            //valueFound = true;
+                        }
+                        else if (virtualCall.Previous?.OpCode == OpCodes.Ldloc_0 && virtualCall.Previous?.Previous?.OpCode == OpCodes.Initobj)
+                        {
+                            // New()
+                            value = virtualCall?.Previous?.Previous?.Operand;
+                            //valueFound = true;
+                        }
+                        else
+                        {
+                            throw new NotSupportedException();
                         }
 
-                        if (valueFound)
+                        //if (valueFound)
                         {
-                            Console.WriteLine($"PropertyValue = '{value}'");
+                            string name = methodInfo1.Name.Replace("set_", "");
+                            Console.WriteLine($"PropertyName = '{name}', PropertyValue = '{value}'");
 
                             componentParameters.Add(ComponentParameter.CreateParameter(name, value));
                         }
                     }
-
-
 
                     //var props = typeof(TComponent).GetProperties();
                     //foreach (var p in props)
@@ -561,6 +610,11 @@ namespace ConsoleAppBUnit
 
         public class Com : IComponent
         {
+            public Com()
+            {
+                Console.WriteLine(DateTime.Now + "hello from constructor");
+            }
+
             [Parameter]
             public string Name { get; set; }
 
