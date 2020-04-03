@@ -84,11 +84,11 @@ namespace ConsoleAppBUnit
                 .Build();
 
             var r6 = x.RenderComponent6<Com>(
-                c => c.Name = "stef",
-                c => c.NameNull = null,
-                c => c.Age = 42 + 1,
-                c => c.NonGenericCallback = EventCallback.Empty,
-                c => c.GenericCallback = new EventCallback<EventArgs>()
+                c => c.Name = "stef", // simple constant assigment
+                c => c.NameNull = null, // simple constant assigment
+                c => c.Age = 42 + 1, // simple assigment
+                c => c.NonGenericCallback = EventCallback.Empty, // simple assigment
+                c => c.GenericCallback = new EventCallback<EventArgs>() // simple new() statement
             );
 
             var r7 = x.RenderComponent<Com>(
