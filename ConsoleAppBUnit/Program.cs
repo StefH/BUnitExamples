@@ -99,10 +99,10 @@ namespace ConsoleAppBUnit
                 ComponentParameterTyped<Com>.Create(c => c.GenericCallback, new EventCallback<EventArgs>())
             );
 
-            //var r8 = x.RenderComponent<Com>(
-            //    ComponentParameterTyped<Com>.Create(c => c.Name = "n"),
-            //    ComponentParameterTyped<Com>.Create(c => c.Age = 3)
-            //);
+            var r8 = x.RenderComponent8<Com>(
+                (c => c.Name, "d"),
+                (c => c.Age, 3)
+            );
         }
 
         public class ComponentParameterTypedBuilder<TComponent> where TComponent : class, IComponent
@@ -605,6 +605,56 @@ namespace ConsoleAppBUnit
             public IRenderedComponent<TComponent> RenderComponent7<TComponent>(params ComponentParameterTyped<TComponent>[] parameters) where TComponent : class, IComponent
             {
                 return null;// base.RenderComponent<TComponent>(builder.Build());
+            }
+
+            public IRenderedComponent<TComponent> RenderComponent8<TComponent>(params (Expression<Func<TComponent, object>> Expression, object Value)[] parameters) where TComponent : class, IComponent
+            {
+                var componentParameters = new List<ComponentParameter>();
+                //Tuple<Expression<Func<TComponent, TValue>>, TValue> x;
+                foreach (var parameter in parameters)
+                {
+                    if (parameter.Expression.Body is MemberExpression memberExpression && memberExpression.Member is PropertyInfo propertyInfo)
+                    {
+                        string propertyName = propertyInfo.Name;
+                        Type propertyType = propertyInfo.PropertyType;
+
+                        Type valueType = parameter.Value?.GetType();
+
+                        if (valueType != null && valueType != propertyType)
+                        {
+                            throw new NotSupportedException($"The value type '{valueType}' is not the sam eas the expression type '{propertyType}'.");
+                        }
+                        componentParameters.Add(ComponentParameter.CreateParameter(propertyName, parameter.Value));
+                    }
+
+                    throw new NotSupportedException($"The expression '{parameter.Expression}' does not resolve to a Property.");
+                }
+
+
+                return base.RenderComponent<TComponent>(componentParameters.ToArray());
+            }
+
+            //public IRenderedComponent<TComponent> RenderComponent9<TComponent>(params TP<Expression<Func<TComponent, object>>, object>>[] parameters) where TComponent : class, IComponent
+            //{
+            //    return null;// base.RenderComponent<TComponent>(builder.Build());
+            //}
+        }
+
+        public class TP<TComponent, TValue>
+        {
+            private readonly Expression<Func<TValue, TValue>> _expression;
+            private readonly TValue _value;
+
+            public TP(Expression<Func<TValue, TValue>> expression, TValue value)
+            {
+                _expression = expression;
+                _value = value;
+            }
+
+            public void Deconstruct(out Expression<Func<TValue, TValue>> expression, out TValue value)
+            {
+                expression = _expression;
+                value = _value;
             }
         }
 
