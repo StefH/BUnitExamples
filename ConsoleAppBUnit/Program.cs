@@ -71,11 +71,11 @@ namespace ConsoleAppBUnit
             });
 
 
-            var builder = new ComponentParameterTypedBuilder<Com>();
-            builder.Set(c => c.Name, "name");
-            builder.Set(c => c.Age, 42);
+            var componentParameterTypedBuilder = new ComponentParameterTypedBuilder<Com>();
+            componentParameterTypedBuilder.Set(c => c.Name, "name");
+            componentParameterTypedBuilder.Set(c => c.Age, 42);
 
-            var r5 = x.RenderComponent5(builder);
+            var r5 = x.RenderComponent5(componentParameterTypedBuilder);
 
             var products = new Builder()
                 .CreateListOfSize<Com>(10)
@@ -105,7 +105,7 @@ namespace ConsoleAppBUnit
                
             );
 
-            var r9 = x.RenderComponent9<Com>(b => b
+            var r9 = x.RenderComponent9<Com>(builder => builder
                 .Add(c => c.Name, "n")
                 .Add(c => c.Age, 3)
             );
