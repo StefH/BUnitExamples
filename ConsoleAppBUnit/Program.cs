@@ -100,8 +100,14 @@ namespace ConsoleAppBUnit
             );
 
             var r8 = x.RenderComponent8<Com>(
-                (c => c.Name, "d"),
-                (c => c.Age, 3)
+                (c => c.Age, 3),
+                (c => c.Name, "d")
+               
+            );
+
+            var r9 = x.RenderComponent9<Com>(b => b
+                .Add(c => c.Name, "n")
+                .Add(c => c.Age, 3)
             );
         }
 
@@ -116,6 +122,17 @@ namespace ConsoleAppBUnit
                     string name = memberExpression.Member.Name;
                     _componentParameters.Add(ComponentParameter.CreateParameter(name, value));
                 }
+            }
+
+            public ComponentParameterTypedBuilder<TComponent> Add<TValue>(Expression<Func<TComponent, TValue>> expression, TValue value)
+            {
+                if (expression.Body is MemberExpression memberExpression)
+                {
+                    string name = memberExpression.Member.Name;
+                    _componentParameters.Add(ComponentParameter.CreateParameter(name, value));
+                }
+
+                return this;
             }
 
             public ComponentParameter[] Build()
@@ -611,33 +628,38 @@ namespace ConsoleAppBUnit
             {
                 var componentParameters = new List<ComponentParameter>();
                 //Tuple<Expression<Func<TComponent, TValue>>, TValue> x;
-                foreach (var parameter in parameters)
-                {
-                    if (parameter.Expression.Body is MemberExpression memberExpression && memberExpression.Member is PropertyInfo propertyInfo)
-                    {
-                        string propertyName = propertyInfo.Name;
-                        Type propertyType = propertyInfo.PropertyType;
+                //foreach (var parameter in parameters)
+                //{
+                //    if (parameter.Expression.Body is MemberExpression memberExpression)
+                //    {
+                //        string propertyName = memberExpression.Member.Name;
+                //        Type propertyType = null; //memberExpression.Member.MemberType;
 
-                        Type valueType = parameter.Value?.GetType();
+                //        Type valueType = parameter.Value?.GetType();
 
-                        if (valueType != null && valueType != propertyType)
-                        {
-                            throw new NotSupportedException($"The value type '{valueType}' is not the sam eas the expression type '{propertyType}'.");
-                        }
-                        componentParameters.Add(ComponentParameter.CreateParameter(propertyName, parameter.Value));
-                    }
-
-                    throw new NotSupportedException($"The expression '{parameter.Expression}' does not resolve to a Property.");
-                }
+                //        if (valueType != null && valueType != propertyType)
+                //        {
+                //            throw new NotSupportedException($"The value type '{valueType}' is not the sam eas the expression type '{propertyType}'.");
+                //        }
+                //        componentParameters.Add(ComponentParameter.CreateParameter(propertyName, parameter.Value));
+                //    }
+                //    else
+                //    {
+                //        throw new NotSupportedException($"The expression '{parameter.Expression}' does not resolve to a Property.");
+                //    }
+                //}
 
 
                 return base.RenderComponent<TComponent>(componentParameters.ToArray());
             }
 
-            //public IRenderedComponent<TComponent> RenderComponent9<TComponent>(params TP<Expression<Func<TComponent, object>>, object>>[] parameters) where TComponent : class, IComponent
-            //{
-            //    return null;// base.RenderComponent<TComponent>(builder.Build());
-            //}
+            public IRenderedComponent<TComponent> RenderComponent9<TComponent>(Action<ComponentParameterTypedBuilder<TComponent>> action) where TComponent : class, IComponent
+            {
+                var builder = new ComponentParameterTypedBuilder<TComponent>();
+                action(builder);
+                
+                return base.RenderComponent<TComponent>(builder.Build());
+            }
         }
 
         public class TP<TComponent, TValue>
