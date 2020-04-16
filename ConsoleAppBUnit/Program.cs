@@ -66,7 +66,7 @@ namespace ConsoleAppBUnit
             var r4 = x.RenderComponent4<Com>(c =>
             {
                 c.Name = "x";
-                c.Age = 42;
+                c.Age = 0;
                 c.NonGenericCallback = EventCallback.Empty;
                 c.GenericCallback = new EventCallback<EventArgs>();
             });
@@ -266,6 +266,14 @@ namespace ConsoleAppBUnit
                 var cpOriginal = (TComponent)FormatterServices.GetUninitializedObject(typeof(TComponent));
 
                 a(cpNew);
+
+                
+
+                var props = typeof(TComponent).GetProperties();
+                //var mc = (TComponent)new MyClassBuilder(typeof(TComponent).FullName).CreateObject(props.Select(p => p.Name).ToArray(), props.Select(p => p.PropertyType).ToArray());
+
+                //a(mc);
+
 
                 foreach (var p in typeof(TComponent).GetProperties())
                 {
