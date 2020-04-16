@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Bunit;
 using Castle.DynamicProxy;
@@ -105,9 +106,12 @@ namespace ConsoleAppBUnit
                
             );
 
+            int xxxxxi = 9;
             var r9 = x.RenderComponent9<Com>(builder => builder
-                .Add(c => c.Name, "n")
-                .Add(c => c.Age, 3)
+                .Add(c => c.Name, "n" + "d")
+                .Add(c => c.Field, 4)
+                .Add(c => c.X(), 6)
+                .Add(c => c.Age, 3 - xxxxxi)
             );
         }
 
@@ -126,10 +130,17 @@ namespace ConsoleAppBUnit
 
             public ComponentParameterTypedBuilder<TComponent> Add<TValue>(Expression<Func<TComponent, TValue>> expression, TValue value)
             {
+                var d = new Dictionary<int,int>();
+            
+
                 if (expression.Body is MemberExpression memberExpression)
                 {
                     string name = memberExpression.Member.Name;
                     _componentParameters.Add(ComponentParameter.CreateParameter(name, value));
+                }
+                else
+                {
+                    throw new NotSupportedException($"The expression '{expression}' does not resolve to a Property or Field on the class '{typeof(TComponent)}'.");
                 }
 
                 return this;
@@ -251,6 +262,26 @@ namespace ConsoleAppBUnit
             public IRenderedComponent<TComponent> RenderComponent4<TComponent>(Action<TComponent> a) where TComponent : class, IComponent, new()
             {
                 var componentParameters = new List<ComponentParameter>();
+                var cpNew = (TComponent)FormatterServices.GetUninitializedObject(typeof(TComponent));
+                var cpOriginal = (TComponent)FormatterServices.GetUninitializedObject(typeof(TComponent));
+
+                a(cpNew);
+
+                foreach (var p in typeof(TComponent).GetProperties())
+                {
+                    componentParameters.Add(ComponentParameter.CreateParameter(p.Name, p.GetValue(cpNew)));
+                }
+
+
+                var com = DetailedCompare(cpOriginal, cpNew);
+
+                var variance = com.FirstOrDefault();
+                if (variance != null)
+                {
+                    // componentParameters.Add(ComponentParameter.CreateParameter(variance.Prop, variance.Left ?? variance.Right));
+                }
+
+                int y = 9;
 
                 var instructions = a.Method.GetInstructions();
 
@@ -686,6 +717,13 @@ namespace ConsoleAppBUnit
             {
                 Console.WriteLine(DateTime.Now + "hello from constructor");
             }
+
+            public int X()
+            {
+                return -5;
+            }
+
+            public int Field { get; set; }
 
             [Parameter]
             public string Name { get; set; }
