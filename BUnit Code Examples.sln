@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F9D5F631-8E4
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppBUnit", "ConsoleAppBUnit\ConsoleAppBUnit.csproj", "{96B8C2B6-3272-4621-AAC0-34BAF3E05ED1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{A6332127-45F9-4A16-9DCA-68A555567172}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{A6332127-45F9-4A16-9DCA-68A555567172}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ILReader", "ILReader\ILReader.csproj", "{3B40E8C3-C4E8-4085-9F82-F64308F3791C}"
 EndProject
