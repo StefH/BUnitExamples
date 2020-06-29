@@ -4,7 +4,7 @@ using Xunit;
 
 namespace BlazorApp.WebAssembly.Tests
 {
-    public class CounterTestV2 : TestContext
+    public class CounterTestsWithTestContext : TestContext
     {
         [Fact]
         public void CounterShouldIncrementWhenClicked()
