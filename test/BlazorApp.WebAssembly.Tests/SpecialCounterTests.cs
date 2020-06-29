@@ -33,5 +33,18 @@ namespace BlazorApp.WebAssembly.Tests
 
             counterComponent.Instance.Start.Should().Be(2);
         }
+
+        [Fact]
+        public void CounterShouldUseStartFluentInterface()
+        {
+            // Arrange / Act: render the SpecialCounter.razor component
+            var counterComponent = RenderComponent<SpecialCounter>(componentParameterBuilder =>
+            {
+                componentParameterBuilder.Add(specialCounter => specialCounter.Start, 3);
+            });
+
+            // Assert: first find the <p> element, then verify its content
+            counterComponent.Find("p").MarkupMatches("<p>Current count: 3</p>");
+        }
     }
 }
