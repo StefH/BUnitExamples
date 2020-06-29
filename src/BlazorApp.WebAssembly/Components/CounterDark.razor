@@ -1,0 +1,11 @@
+﻿<div style="border-color: red; border-style: double; background-color: @Color;">
+
+    <p>Current count: @Start</p>
+
+    <button class="btn btn-primary" @onclick="Minus">Click me</button>
+
+</div>
+
+@code {
+    public string Color => IsDark ? "darkgrey" : "white";
+}
