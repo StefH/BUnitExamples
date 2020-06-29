@@ -1,22 +1,25 @@
+using BlazorApp.WebAssembly.Pages;
 using Bunit;
 using Xunit;
 
 namespace BlazorApp.WebAssembly.Tests
 {
-    public class UnitTest1 : TestContext
+    public class CounterTest
     {
         [Fact]
         public void CounterShouldIncrementWhenClicked()
         {
+            using var ctx = new TestContext();
+
             // Arrange: render the Counter.razor component
-            var cut = RenderComponent<Counter>();
+            var counterComponent = ctx.RenderComponent<Counter>();
 
             // Act: find and click the <button> element to increment
             // the counter in the <p> element
-            cut.Find("button").Click();
+            counterComponent.Find("button").Click();
 
             // Assert: first find the <p> element, then verify its content
-            cut.Find("p").MarkupMatches("<p>Current count: 1</p>");
+            counterComponent.Find("p").MarkupMatches("<p>Current count: 1</p>");
         }
     }
 }
