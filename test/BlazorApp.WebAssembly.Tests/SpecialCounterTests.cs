@@ -1,5 +1,4 @@
 using BlazorApp.WebAssembly.Components;
-using BlazorApp.WebAssembly.Pages;
 using Bunit;
 using FluentAssertions;
 using Xunit;
@@ -25,12 +24,12 @@ namespace BlazorApp.WebAssembly.Tests
             var counterComponent = RenderComponent<SpecialCounter>(("Start", 3));
 
             // Act: find and click the <button> element to decrease value
-            // the counter in the <p> element
             counterComponent.Find("button").Click();
 
             // Assert: first find the <p> element, then verify its content
             counterComponent.Find("p").MarkupMatches("<p>Current count: 2</p>");
 
+            // Assert: check if the start value is now 2
             counterComponent.Instance.Start.Should().Be(2);
         }
 

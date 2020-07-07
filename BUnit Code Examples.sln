@@ -5,11 +5,11 @@ VisualStudioVersion = 16.0.29920.165
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F9D5F631-8E4D-43DC-B647-6680D2549996}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorApp.WebAssembly", "src\BlazorApp.WebAssembly\BlazorApp.WebAssembly.csproj", "{F4A93D59-EB5D-4C61-8A02-F5A85B1A6952}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorApp.WebAssembly", "src\BlazorApp.WebAssembly\BlazorApp.WebAssembly.csproj", "{F4A93D59-EB5D-4C61-8A02-F5A85B1A6952}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{352D7F3E-F775-4826-BFF7-E6E09CECF0F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorApp.WebAssembly.Tests", "test\BlazorApp.WebAssembly.Tests\BlazorApp.WebAssembly.Tests.csproj", "{3E0EB1AD-51E3-4C21-A1F7-F7FA3DE19ED5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorApp.WebAssembly.Tests", "test\BlazorApp.WebAssembly.Tests\BlazorApp.WebAssembly.Tests.csproj", "{3E0EB1AD-51E3-4C21-A1F7-F7FA3DE19ED5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
